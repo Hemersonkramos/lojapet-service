@@ -1,0 +1,61 @@
+@base = http://localhost:8083
+@produtoId = 1
+@pedidoId = 1
+@pagamentoId = 1
+
+### Saúde
+GET {{base}}/health
+
+### Criar produto (copie o ID retornado para produtoId)
+POST {{base}}/produtos
+Content-Type: application/json
+
+{"nome":"Ração 10 kg","descricao":"Ração para cães adultos","preco":120,"estoque":20,"ativo":true}
+
+### Listar produtos
+GET {{base}}/produtos
+
+### Criar retirada (cliente 1 deve existir em Cadastros ou no modo demo)
+POST {{base}}/pedidos
+Content-Type: application/json
+
+{"cliente_id":1,"tipo_recebimento":"RETIRADA","itens":[{"produto_id":{{produtoId}},"quantidade":2}],"retirada":{"nome_retirante":"Hemerson"}}
+
+### Criar entrega
+POST {{base}}/pedidos
+Content-Type: application/json
+
+{"cliente_id":1,"tipo_recebimento":"ENTREGA","itens":[{"produto_id":{{produtoId}},"quantidade":1}],"entrega":{"destinatario":"Hemerson","telefone":"86999999999","cep":"64000000","logradouro":"Rua Exemplo","numero":"100","bairro":"Centro","cidade":"Teresina","uf":"PI"}}
+
+### Consultar pedido (atualize pedidoId)
+GET {{base}}/pedidos/{{pedidoId}}
+
+### Histórico
+GET {{base}}/pedidos?clienteId=1
+
+### Registrar pagamento pendente (atualize pagamentoId da resposta)
+POST {{base}}/pedidos/{{pedidoId}}/pagamentos
+Content-Type: application/json
+
+{"forma":"PIX"}
+
+### Confirmar manualmente (demonstração, não verifica Pix real)
+PATCH {{base}}/pedidos/{{pedidoId}}/pagamentos/{{pagamentoId}}/confirmar
+
+### Preparar
+PATCH {{base}}/pedidos/{{pedidoId}}/status
+Content-Type: application/json
+
+{"status":"EM_PREPARACAO"}
+
+### Pronto para retirada (somente pedidos RETIRADA)
+PATCH {{base}}/pedidos/{{pedidoId}}/status
+Content-Type: application/json
+
+{"status":"PRONTO_PARA_RETIRADA"}
+
+### Concluir retirada
+PATCH {{base}}/pedidos/{{pedidoId}}/status
+Content-Type: application/json
+
+{"status":"RETIRADO"}

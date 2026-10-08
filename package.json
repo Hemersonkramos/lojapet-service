@@ -1,0 +1,28 @@
+{
+  "name": "petshop-loja-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "db:check": "tsx src/check-database.ts",
+    "test": "node --import tsx --test tests/*.test.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.0",
+    "prettier": "^3.9.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

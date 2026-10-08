@@ -1,0 +1,327 @@
+{
+  "info": {
+    "name": "Loja Pet Shop — Entrega 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Execute em ordem com MySQL e Cadastros reais ativos. Ajuste clienteId para um cliente existente. A confirmação de pagamento é manual."
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "clienteId",
+      "value": "1"
+    },
+    {
+      "key": "produtoId",
+      "value": ""
+    },
+    {
+      "key": "pedidoId",
+      "value": ""
+    },
+    {
+      "key": "pagamentoId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Saúde",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base}}/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Criar produto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/produtos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Ração 10 kg\",\n  \"descricao\": \"Demonstração Entrega 2\",\n  \"preco\": 120,\n  \"estoque\": 20,\n  \"ativo\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) { pm.collectionVariables.set('produtoId', pm.response.json().id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar produto",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base}}/produtos/{{produtoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Criar pedido de retirada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": {{clienteId}},\n  \"tipo_recebimento\": \"RETIRADA\",\n  \"itens\": [\n    {\n      \"produto_id\": {{produtoId}},\n      \"quantidade\": 2\n    }\n  ],\n  \"retirada\": {\n    \"nome_retirante\": \"Ana\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) { pm.collectionVariables.set('pedidoId', pm.response.json().id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar pedido",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base}}/pedidos/{{pedidoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registrar pagamento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/pedidos/{{pedidoId}}/pagamentos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"forma\": \"PIX\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 201', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) { const pagamentos = pm.response.json().pagamentos; pm.collectionVariables.set('pagamentoId', pagamentos[pagamentos.length - 1].id); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Confirmar pagamento manual",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": "{{base}}/pedidos/{{pedidoId}}/pagamentos/{{pagamentoId}}/confirmar"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Preparar pedido",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/pedidos/{{pedidoId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"EM_PREPARACAO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pronto para retirada",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/pedidos/{{pedidoId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"PRONTO_PARA_RETIRADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Concluir retirada",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base}}/pedidos/{{pedidoId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"RETIRADO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Consultar compras do cliente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base}}/pedidos?clienteId={{clienteId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
