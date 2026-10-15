@@ -1,0 +1,38 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS produtos (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT NOT NULL, descricao TEXT,
+ preco TEXT NOT NULL, estoque INTEGER NOT NULL CHECK(estoque>=0), ativo INTEGER NOT NULL DEFAULT 1 CHECK(ativo IN(0,1))
+);
+CREATE TABLE IF NOT EXISTS pedidos (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, cliente_id INTEGER NOT NULL,
+ data_criacao TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ tipo_recebimento TEXT NOT NULL CHECK(tipo_recebimento IN('ENTREGA','RETIRADA')),
+ status TEXT NOT NULL DEFAULT 'RECEBIDO' CHECK(status IN('RECEBIDO','EM_PREPARACAO','SAIU_PARA_ENTREGA','ENTREGUE','PRONTO_PARA_RETIRADA','RETIRADO','CANCELADO')),
+ subtotal TEXT NOT NULL, taxa_entrega TEXT NOT NULL, total TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS itens_pedido (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
+ produto_id INTEGER NOT NULL REFERENCES produtos(id), nome_produto TEXT NOT NULL,
+ quantidade INTEGER NOT NULL CHECK(quantidade>0), preco_unitario TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS entregas (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL UNIQUE REFERENCES pedidos(id),
+ destinatario TEXT NOT NULL, telefone TEXT NOT NULL, cep TEXT NOT NULL, logradouro TEXT NOT NULL,
+ numero TEXT NOT NULL, complemento TEXT, bairro TEXT NOT NULL, cidade TEXT NOT NULL,
+ uf TEXT NOT NULL, referencia TEXT, data_entrega TEXT
+);
+CREATE TABLE IF NOT EXISTS retiradas (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL UNIQUE REFERENCES pedidos(id),
+ nome_retirante TEXT NOT NULL, codigo_retirada TEXT NOT NULL UNIQUE, data_retirada TEXT
+);
+CREATE TABLE IF NOT EXISTS pagamentos (
+ id INTEGER PRIMARY KEY AUTOINCREMENT, pedido_id INTEGER NOT NULL REFERENCES pedidos(id),
+ forma TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'PENDENTE', valor TEXT NOT NULL, data_pagamento TEXT
+);
+CREATE TABLE IF NOT EXISTS clientes_projecao (
+ id_cliente INTEGER PRIMARY KEY, nome TEXT NOT NULL, email TEXT, ativo INTEGER NOT NULL CHECK(ativo IN(0,1)),
+ revision INTEGER NOT NULL CHECK(revision>0), event_id TEXT NOT NULL, recebido_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_pedidos_cliente ON pedidos(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_itens_pedido ON itens_pedido(pedido_id);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_pedido ON pagamentos(pedido_id);

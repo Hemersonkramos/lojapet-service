@@ -1,28 +1,26 @@
 {
-  "name": "petshop-loja-service",
+  "name": "petshop-sistema",
   "version": "1.0.0",
   "private": true,
-  "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "db:check": "tsx src/check-database.ts",
-    "test": "node --import tsx --test tests/*.test.ts"
-  },
+  "workspaces": [
+    "microsservicos/loja"
+  ],
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13.0"
   },
-  "dependencies": {
-    "dotenv": "^16.4.7",
-    "express": "^5.1.0",
-    "mysql2": "^3.14.0",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.1",
-    "@types/node": "^22.14.0",
-    "prettier": "^3.9.9",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.3"
+  "scripts": {
+    "dev": "npm run dev --workspace=petshop-loja-service",
+    "build": "npm run build --workspace=petshop-loja-service",
+    "start": "npm run start --workspace=petshop-loja-service",
+    "db:check": "npm run db:check --workspace=petshop-loja-service",
+    "test": "npm run test --workspace=petshop-loja-service",
+    "consumer": "npm run consumer --workspace=petshop-loja-service",
+    "rabbit:setup": "npm run rabbit:setup --workspace=petshop-loja-service",
+    "test:mysql": "npm run test:mysql --workspace=petshop-loja-service",
+    "test:rabbit": "npm run test:rabbit --workspace=petshop-loja-service",
+    "db:import:mysql": "npm run db:import:mysql --workspace=petshop-loja-service",
+    "services:start": "powershell -ExecutionPolicy Bypass -File scripts/start-local.ps1",
+    "services:stop": "powershell -ExecutionPolicy Bypass -File scripts/stop-local.ps1",
+    "demo:seed": ".venv-entrega3/Scripts/python.exe scripts/popular-demo.py"
   }
 }

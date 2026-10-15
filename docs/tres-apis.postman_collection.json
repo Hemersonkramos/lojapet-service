@@ -1,0 +1,356 @@
+{
+  "info": {
+    "name": "PetShop - Inserir e buscar nas 3 APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Execute com APIs ativas. IDs padrao correspondem a carga demo. A criacao de cliente exige RabbitMQ. Para usar clienteNovoId na compra, copie para clienteCompraId depois da sincronizacao. Pets: apenas consulta disponivel na API atual."
+  },
+  "variable": [
+    {
+      "key": "cadastrosUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "lojaUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "agendamentosUrl",
+      "value": "http://localhost:8083"
+    },
+    {
+      "key": "clienteCompraId",
+      "value": "1"
+    },
+    {
+      "key": "clienteNovoId",
+      "value": ""
+    },
+    {
+      "key": "clientePetId",
+      "value": "1"
+    },
+    {
+      "key": "petId",
+      "value": "1"
+    },
+    {
+      "key": "produtoId",
+      "value": "1"
+    },
+    {
+      "key": "profissionalId",
+      "value": "1"
+    },
+    {
+      "key": "servicoId",
+      "value": "1"
+    },
+    {
+      "key": "pedidoId",
+      "value": "1"
+    },
+    {
+      "key": "agendamentoId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Cadastros",
+      "item": [
+        {
+          "name": "Listar clientes e pets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{cadastrosUrl}}/clientes/"
+          }
+        },
+        {
+          "name": "Buscar pet e tutor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{cadastrosUrl}}/pets/{{petId}}"
+          }
+        },
+        {
+          "name": "Inserir cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{cadastrosUrl}}/clientes/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Juliana Martins\",\n  \"email\": \"juliana@example.com\",\n  \"telefone\": \"11999990000\",\n  \"ativo\": true,\n  \"enderecos\": [\n    {\n      \"cep\": \"01001000\",\n      \"logradouro\": \"Rua Exemplo\",\n      \"numero\": \"120\",\n      \"bairro\": \"Centro\",\n      \"cidade\": \"Sao Paulo\",\n      \"uf\": \"SP\",\n      \"principal\": true\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"clienteNovoId\", pm.response.json().dados.id_cliente);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Loja",
+      "item": [
+        {
+          "name": "Listar produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{lojaUrl}}/produtos"
+          }
+        },
+        {
+          "name": "Inserir produto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{lojaUrl}}/produtos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Petisco natural 200g\",\n  \"descricao\": \"Petisco para caes\",\n  \"preco\": 22.9,\n  \"estoque\": 50,\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"produtoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar produto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{lojaUrl}}/produtos/{{produtoId}}"
+          }
+        },
+        {
+          "name": "Inserir pedido para cliente da carga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{lojaUrl}}/pedidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": {{clienteCompraId}},\n  \"tipo_recebimento\": \"RETIRADA\",\n  \"retirada\": {\n    \"nome_retirante\": \"Marina Almeida\"\n  },\n  \"itens\": [\n    {\n      \"produto_id\": {{produtoId}},\n      \"quantidade\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"pedidoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{lojaUrl}}/pedidos/{{pedidoId}}"
+          }
+        },
+        {
+          "name": "Listar pedidos do cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{lojaUrl}}/pedidos?clienteId={{clienteCompraId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agendamentos",
+      "item": [
+        {
+          "name": "Listar profissionais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{agendamentosUrl}}/profissionais"
+          }
+        },
+        {
+          "name": "Inserir profissional",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{agendamentosUrl}}/profissionais",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Fernanda Silva\",\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"profissionalId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar servicos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{agendamentosUrl}}/servicos"
+          }
+        },
+        {
+          "name": "Inserir servico",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{agendamentosUrl}}/servicos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Banho hidratante\",\n  \"descricao\": \"Banho para caes\",\n  \"preco\": 50,\n  \"duracao_minutos\": 30,\n  \"ativo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"servicoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inserir agendamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{agendamentosUrl}}/agendamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pet_id\": {{petId}},\n  \"cliente_id\": {{clientePetId}},\n  \"servico_id\": {{servicoId}},\n  \"profissional_id\": {{profissionalId}},\n  \"inicio\": \"2026-10-22T10:00:00\",\n  \"fim\": \"2026-10-22T10:30:00\",\n  \"valor\": 50,\n  \"status\": \"agendado\",\n  \"observacoes\": \"Criado pelo Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) pm.collectionVariables.set(\"agendamentoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar agendamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{agendamentosUrl}}/agendamentos"
+          }
+        },
+        {
+          "name": "Buscar agendamento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{agendamentosUrl}}/agendamentos/{{agendamentoId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

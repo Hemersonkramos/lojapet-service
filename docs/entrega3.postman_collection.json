@@ -1,0 +1,140 @@
+{
+  "info": {
+    "name": "Pet Shop — Entrega 3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "cadastrosUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "lojaUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "clienteId",
+      "value": "1"
+    },
+    {
+      "key": "requestKey",
+      "value": "troque-por-chave-unica-para-cada-cliente"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Cadastrar (consumidor parado)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{requestKey}}"
+          }
+        ],
+        "url": "{{cadastrosUrl}}/clientes/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Hemerson\",\n  \"telefone\": \"86999999999\",\n  \"email\": \"exemplo@email.com\",\n  \"ativo\": true,\n  \"enderecos\": []\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Publicação confirmada: 202',()=>pm.response.to.have.status(202));",
+              "if(pm.response.code===202) pm.collectionVariables.set('clienteId',pm.response.json().dados.id_cliente);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Repetir mesma chave (mesmo cliente/evento)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "{{requestKey}}"
+          }
+        ],
+        "url": "{{cadastrosUrl}}/clientes/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Hemerson\",\n  \"telefone\": \"86999999999\",\n  \"email\": \"exemplo@email.com\",\n  \"ativo\": true,\n  \"enderecos\": []\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Listar fonte oficial",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{cadastrosUrl}}/clientes/"
+      }
+    },
+    {
+      "name": "4. Desativar (evento atualizado)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{cadastrosUrl}}/clientes/{{clienteId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Hemerson\",\n  \"telefone\": \"86999999999\",\n  \"email\": \"exemplo@email.com\",\n  \"ativo\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "5. Saúde Loja",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{lojaUrl}}/health"
+      }
+    },
+    {
+      "name": "6. Pedido (troque produto_id por produto existente)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{lojaUrl}}/pedidos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cliente_id\": {{clienteId}},\n  \"tipo_recebimento\": \"RETIRADA\",\n  \"itens\": [\n    {\n      \"produto_id\": 1,\n      \"quantidade\": 1\n    }\n  ],\n  \"retirada\": {\n    \"nome_retirante\": \"Hemerson\"\n  }\n}"
+        }
+      }
+    }
+  ]
+}
