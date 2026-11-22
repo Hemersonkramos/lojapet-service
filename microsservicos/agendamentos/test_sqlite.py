@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 from fastapi.testclient import TestClient
+from apoio_jwt import cabecalho_auth
 
 _tmp = tempfile.TemporaryDirectory()
 os.environ["AGENDAMENTOS_DATABASE_URL"] = "sqlite:///" + (Path(_tmp.name) / "test.db").as_posix()
@@ -18,7 +19,7 @@ class SQLiteIntegrationTest(unittest.TestCase):
         _tmp.cleanup()
 
     def test_fluxo_persistencia_e_eventos(self):
-        with TestClient(app) as api:
+        with TestClient(app, headers=cabecalho_auth()) as api:
             self.assertEqual(len(inspect(engine).get_table_names()), 4)
             profissional = api.post("/profissionais", json={"nome": "Ana"}).json()
             servico = api.post("/servicos", json={"nome": "Banho", "preco": 45.50, "duracao_minutos": 30}).json()
@@ -38,7 +39,7 @@ class SQLiteIntegrationTest(unittest.TestCase):
             dados["status"] = "concluido"
             self.assertEqual(api.put(f"/agendamentos/{ident}", json=dados).status_code, 200)
         engine.dispose()
-        with TestClient(app) as api:
+        with TestClient(app, headers=cabecalho_auth()) as api:
             salvo = api.get(f"/agendamentos/{ident}").json()
             self.assertEqual(salvo["status"], "concluido")
             self.assertEqual(float(salvo["valor"]), 50.25)

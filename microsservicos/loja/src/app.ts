@@ -4,23 +4,29 @@ import { ZodError } from "zod";
 import { ProdutoController } from "./controller/ProdutoController.js";
 import { PedidoController } from "./controller/PedidoController.js";
 import { AppError } from "./errors.js";
-import { config } from "./config.js";
+import { autenticar, exigirRole } from "./security/auth.js";
+import { INSTANCIA, registrarInstancia } from "./instancia.js";
 export const app = express();
 app.disable("x-powered-by");
+app.set("trust proxy", true);
+app.use(registrarInstancia);
 app.use(express.json({ limit: "100kb" }));
 app.get("/health", (_req, res) =>
   res.json({
     servico: "loja",
     status: "ok",
     clientes: "projecao_local",
+    instancia: INSTANCIA,
   }),
 );
+app.use(autenticar);
+const somenteAdmin = exigirRole("ADMIN");
 const produtos = new ProdutoController();
 const pedidos = new PedidoController();
 app.get("/produtos", produtos.listar);
 app.get("/produtos/:id", produtos.buscar);
-app.post("/produtos", produtos.criar);
-app.put("/produtos/:id", produtos.atualizar);
+app.post("/produtos", somenteAdmin, produtos.criar);
+app.put("/produtos/:id", somenteAdmin, produtos.atualizar);
 app.get("/pedidos", pedidos.listar);
 app.get("/pedidos/:id", pedidos.buscar);
 app.post("/pedidos", pedidos.criar);

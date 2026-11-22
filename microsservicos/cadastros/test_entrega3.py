@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from apoio_jwt import cabecalho_auth
 from unittest.mock import patch
 from database import Base, get_db
 from models.cliente_model import ClienteModel, EnderecoModel
@@ -56,7 +57,7 @@ class Entrega3Test(unittest.TestCase):
         self.assertEqual(self.db.query(EnderecoModel).count(),0)
     def test_http_202_after_confirm_only(self):
         app.dependency_overrides[get_db]=lambda:self.db
-        with TestClient(app) as client:
+        with TestClient(app, headers=cabecalho_auth()) as client:
             with patch("services.cliente_service.publicar_evento_cadastro",side_effect=ConnectionError):
                 response=client.post("/clientes/",headers={"Idempotency-Key":"http-1"},json=self.data.model_dump())
                 self.assertEqual(response.status_code,503)

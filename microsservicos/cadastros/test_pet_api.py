@@ -1,5 +1,6 @@
 import unittest
 from fastapi.testclient import TestClient
+from apoio_jwt import cabecalho_auth
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -26,7 +27,7 @@ class PetAPITest(unittest.TestCase):
                 db.add(pet)
                 db.commit()
                 pet_id, cliente_id = pet.id, cliente.id
-            with TestClient(app) as api:
+            with TestClient(app, headers=cabecalho_auth()) as api:
                 response = api.get(f"/pets/{pet_id}")
                 self.assertEqual(response.status_code, 200, response.text)
                 self.assertEqual(response.json()["tutor"]["id"], cliente_id)

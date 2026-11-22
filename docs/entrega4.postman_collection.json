@@ -1,0 +1,513 @@
+{
+  "info": {
+    "_postman_id": "3ba3d799-27f4-49d0-8c42-dbb752d1ca9b",
+    "name": "PetShop - Entrega 4 (JWT + Nginx)",
+    "description": "Base: Nginx em http://localhost. Preencha as variáveis senha_usuario e senha_admin com os valores de AUTH_USER_PASSWORD e AUTH_ADMIN_PASSWORD do .env.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base",
+      "value": "http://localhost"
+    },
+    {
+      "key": "senha_usuario",
+      "value": ""
+    },
+    {
+      "key": "senha_admin",
+      "value": ""
+    },
+    {
+      "key": "token_user",
+      "value": ""
+    },
+    {
+      "key": "token_admin",
+      "value": ""
+    },
+    {
+      "key": "token_adulterado",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Segurança",
+      "item": [
+        {
+          "name": "Rota protegida SEM token (espera 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login usuario (role USER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/auth/login",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"usuario\",\n  \"password\": \"{{senha_usuario}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_user\", pm.response.json().access_token);",
+                  "console.log(\"JWT:\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin (role ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/auth/login",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"{{senha_admin}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_admin\", pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Com token válido (espera 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_user}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token adulterado role USER->ADMIN (espera 401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_adulterado}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Faz o mesmo que editar o payload no jwt.io, mantendo a assinatura original.",
+                  "const [h, p, s] = pm.collectionVariables.get(\"token_user\").split(\".\");",
+                  "const dec = t => JSON.parse(Buffer.from(t.replace(/-/g,\"+\").replace(/_/g,\"/\"), \"base64\").toString());",
+                  "const payload = dec(p); payload.role = \"ADMIN\";",
+                  "const enc = o => Buffer.from(JSON.stringify(o)).toString(\"base64\").replace(/=+$/,\"\").replace(/\\+/g,\"-\").replace(/\\//g,\"_\");",
+                  "pm.collectionVariables.set(\"token_adulterado\", `${h}.${enc(payload)}.${s}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USER em rota de ADMIN (espera 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_user}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ração Teste\",\n  \"preco\": 10.5,\n  \"estoque\": 5\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "ADMIN cria produto (espera 201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ração Premium 10kg\",\n  \"preco\": 189.9,\n  \"estoque\": 20\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastros sem token (espera 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/api/cadastros/clientes/",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "cadastros",
+                "clientes",
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cadastros com token (espera 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_user}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/cadastros/clientes/",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "cadastros",
+                "clientes",
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agendamentos sem token (espera 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/api/agendamentos/agendamentos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "agendamentos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agendamentos com token (espera 200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_user}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/agendamentos/agendamentos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "agendamentos",
+                "agendamentos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Escalabilidade (rode com o Runner, 9 iterações)",
+      "item": [
+        {
+          "name": "Loja via Nginx: ver X-Instance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_user}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base}}/api/loja/produtos",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "produtos"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const i = pm.response.headers.get(\"X-Instance\"); console.log(\"Instância:\", i, \"Upstream:\", pm.response.headers.get(\"X-Upstream\"));",
+                  "pm.test(\"Respondido por \" + i, () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Health da réplica (público)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base}}/api/loja/health",
+              "host": [
+                "{{base}}"
+              ],
+              "path": [
+                "api",
+                "loja",
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log(\"Instância:\", pm.response.json().instancia);",
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

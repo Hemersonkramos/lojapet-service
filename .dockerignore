@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.env
+**/*.db
+**/*.db-*
+**/__pycache__
+.venv*/
+.git/
+artifacts/
+entregas/
+docs/
+frontend/

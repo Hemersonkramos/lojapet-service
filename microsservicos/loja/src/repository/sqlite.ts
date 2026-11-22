@@ -6,6 +6,7 @@ export function openSqlite(path: string) {
   if (path !== ":memory:") mkdirSync(dirname(resolve(path)), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec("PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;");
+  if (path !== ":memory:") db.exec("PRAGMA journal_mode=WAL;");
   db.exec(readFileSync(resolve("migrations/sqlite/001_schema.sql"), "utf8"));
   return db;
 }

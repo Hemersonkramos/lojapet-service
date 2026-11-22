@@ -4,6 +4,7 @@ import schemas
 import os
 import httpx
 import producer
+from seguranca import cabecalho_autorizacao
 
 def criar_profissional(db: Session, profissional: schemas.ProfissionalCreate):
     return repository.criar_profissional(db, profissional)
@@ -61,6 +62,7 @@ def criar_agendamento(
     try:
         resposta = httpx.get(
             f"{os.getenv('CADASTROS_URL', 'http://127.0.0.1:8081').rstrip('/')}/pets/{agendamento.pet_id}",
+            headers=cabecalho_autorizacao(),
             timeout=5
         )
     except httpx.RequestError:
@@ -68,6 +70,9 @@ def criar_agendamento(
 
     if resposta.status_code == 404:
         raise ValueError("Pet não encontrado no microserviço de Cadastros")
+
+    if resposta.status_code in (401, 403):
+        raise ValueError("Cadastros recusou a credencial repassada")
 
     if resposta.status_code != 200:
         raise ValueError("Erro ao consultar o microserviço de Cadastros")
