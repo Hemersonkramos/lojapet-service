@@ -1,4 +1,8 @@
-# PetShop - tres microsservicos e API Gateway
+# PetShop - microsservicos, JWT e Nginx
+
+> **Entrega 4 (atual):** tudo roda em contêineres com `docker compose up -d --build --wait`. O Nginx e o unico ponto de entrada (porta 80), com Authorization Server JWT e 3 replicas da Loja balanceadas. Veja [docs/ENTREGA-4.md](docs/ENTREGA-4.md) e rode os testes de aceitacao com `powershell -ExecutionPolicy Bypass -File scripts/teste-entrega4.ps1`.
+>
+> As secoes abaixo descrevem a execucao local da Entrega 3 (sem Docker), mantida como referencia.
 
 [Baixar pacote com fontes e os tres bancos populados](entregas/petshop-entrega3.zip). Extraia o ZIP em uma pasta separada e siga a instalacao abaixo. O Git guarda os fontes; os bancos populados estao dentro deste pacote.
 

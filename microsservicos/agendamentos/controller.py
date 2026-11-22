@@ -6,6 +6,9 @@ import service
 import producer
 import pika
 from database import SessionLocal
+from seguranca import exigir_role
+
+SOMENTE_ADMIN = [Depends(exigir_role("ADMIN"))]
 
 router = APIRouter()
 def get_db():
@@ -16,7 +19,7 @@ def get_db():
         db.close()
         # ---------- PROFISSIONAIS ----------
 
-@router.post("/profissionais", response_model=schemas.ProfissionalResponse)
+@router.post("/profissionais", response_model=schemas.ProfissionalResponse, dependencies=SOMENTE_ADMIN)
 def criar_profissional(
     profissional: schemas.ProfissionalCreate,
     db: Session = Depends(get_db)
@@ -29,7 +32,7 @@ def listar_profissionais(
     db: Session = Depends(get_db)
 ):
     return service.listar_profissionais(db)
-@router.delete("/profissionais/{profissional_id}")
+@router.delete("/profissionais/{profissional_id}", dependencies=SOMENTE_ADMIN)
 def excluir_profissional(
     profissional_id: int,
     db: Session = Depends(get_db)
@@ -45,7 +48,7 @@ def excluir_profissional(
     return {"mensagem": "Profissional excluído com sucesso"}
 # ---------- SERVIÇOS ----------
 
-@router.post("/servicos")
+@router.post("/servicos", dependencies=SOMENTE_ADMIN)
 def criar_servico(
     servico: schemas.ServicoCreate,
     db: Session = Depends(get_db)
@@ -59,7 +62,7 @@ def listar_servicos(
 ):
     return service.listar_servicos(db)
 
-@router.put("/servicos/{servico_id}")
+@router.put("/servicos/{servico_id}", dependencies=SOMENTE_ADMIN)
 def atualizar_servico(
     servico_id: int,
     servico: schemas.ServicoCreate,
@@ -80,7 +83,7 @@ def atualizar_servico(
     return servico_atualizado
 
 
-@router.delete("/servicos/{servico_id}")
+@router.delete("/servicos/{servico_id}", dependencies=SOMENTE_ADMIN)
 def excluir_servico(
     servico_id: int,
     db: Session = Depends(get_db)
@@ -97,7 +100,7 @@ def excluir_servico(
 
 # ---------- DISPONIBILIDADES ----------
 
-@router.post("/disponibilidades")
+@router.post("/disponibilidades", dependencies=SOMENTE_ADMIN)
 def criar_disponibilidade(
     disponibilidade: schemas.DisponibilidadeCreate,
     db: Session = Depends(get_db)
@@ -111,7 +114,7 @@ def listar_disponibilidades(
 ):
     return service.listar_disponibilidades(db)
 
-@router.delete("/disponibilidades/{disponibilidade_id}")
+@router.delete("/disponibilidades/{disponibilidade_id}", dependencies=SOMENTE_ADMIN)
 def excluir_disponibilidade(
     disponibilidade_id: int,
     db: Session = Depends(get_db)

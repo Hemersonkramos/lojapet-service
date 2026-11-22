@@ -1,10 +1,13 @@
 import { app } from "./app.js";
 import { config } from "./config.js";
 import { pool } from "./repository/database.js";
+import { segredoJwt } from "./security/auth.js";
+import { INSTANCIA } from "./instancia.js";
 async function main() {
+  segredoJwt();
   await pool.query("SELECT 1");
-  const server = app.listen(config.PORT, "127.0.0.1", () =>
-    console.log(`Loja: http://localhost:${config.PORT}`),
+  const server = app.listen(config.PORT, config.HOST, () =>
+    console.log(`Loja [${INSTANCIA}]: http://${config.HOST}:${config.PORT}`),
   );
   for (const signal of ["SIGINT", "SIGTERM"] as const)
     process.on(signal, () =>
@@ -15,7 +18,7 @@ async function main() {
 }
 main().catch((error) => {
   console.error(
-    "Falha ao iniciar. Confira o MySQL e o .env:",
+    "Falha ao iniciar. Confira o banco, JWT_SECRET e o .env:",
     error.code ?? error.message,
   );
   process.exit(1);

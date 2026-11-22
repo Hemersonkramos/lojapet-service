@@ -3,6 +3,7 @@ import { z } from "zod";
 const schema = z.object({
   DB_DRIVER: z.enum(["sqlite", "mysql"]).default("sqlite"),
   SQLITE_PATH: z.string().default("data/loja.db"),
+  HOST: z.string().default("127.0.0.1"),
   PORT: z.coerce.number().int().min(1).max(65535).default(8082),
   DB_HOST: z.string().default("localhost"),
   DB_PORT: z.coerce.number().int().default(3306),
